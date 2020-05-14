@@ -1,0 +1,42 @@
+INTERLIS 2.3;
+
+/** !!------------------------------------------------------------------------------
+ *  !! Version    | wer | Änderung
+ *  !!------------------------------------------------------------------------------
+ *  !! 2020-02-18 | sz  | Ersterfassung; Modell dient einzig zum Import des rohen JSON-Downloads
+ *  !!==============================================================================
+ */
+!!@ foo = "lalelu."; 
+MODEL SO_AGI_Modell_Eins_202000513 (de)
+AT "http://www.geo.so.ch/models/AGI"
+VERSION "2020-05-13"  =
+  IMPORTS CHAdminCodes_V1,GeometryCHLV95_V1;
+
+  TOPIC Bodenbedeckung =
+    OID AS INTERLIS.UUIDOID;
+
+    /** Ställe aus IGEL-Applikation
+     */
+    !!@ foo = "Ich bin ein Metaattribut.";
+    CLASS BoFlaeche =
+      /** Inhalt eines JSON-Objektes des heruntergeladenen Datensatzs.
+       */
+      Content : MANDATORY MTEXT;
+      /** Art der Bodenbedeckung.
+       */      
+      Objekttyp : MANDATORY (
+        Gebaeude,
+        Strasse_Weg,
+        Gewaesser (
+           fliessendes,
+           stehendes
+        )
+      );
+      
+    END BoFlaeche;
+
+
+
+  END Bodenbedeckung;
+
+END SO_AGI_Modell_Eins_202000513.
