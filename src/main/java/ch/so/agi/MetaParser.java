@@ -1,5 +1,6 @@
 package ch.so.agi;
 
+import java.io.Console;
 import java.util.ArrayList;
 import java.util.Iterator;
 
@@ -11,10 +12,14 @@ import ch.interlis.ili2c.Ili2cException;
 import ch.interlis.ili2c.config.Configuration;
 import ch.interlis.ili2c.metamodel.AbstractClassDef;
 import ch.interlis.ili2c.metamodel.AttributeDef;
+import ch.interlis.ili2c.metamodel.Element;
+import ch.interlis.ili2c.metamodel.Enumeration;
+import ch.interlis.ili2c.metamodel.EnumerationType;
 import ch.interlis.ili2c.metamodel.Model;
 import ch.interlis.ili2c.metamodel.PredefinedModel;
 import ch.interlis.ili2c.metamodel.Topic;
 import ch.interlis.ili2c.metamodel.TransferDescription;
+import ch.interlis.ili2c.metamodel.Type;
 import ch.interlis.ili2c.metamodel.TypeModel;
 import ch.interlis.ili2c.metamodel.Viewable;
 import ch.interlis.ilirepository.IliManager;
@@ -32,6 +37,9 @@ public class MetaParser {
         
         
         // https://github.com/edigonzales/itf2avdpoolng_sogis/blob/master/src/main/java/org/catais/utils/ModelUtility.java
+        // https://github.com/sogis/av2ch/blob/master/src/main/java/ch/so/agi/av/Av2ch.java -> Weil das Modell nicht mit Topic beginnen muss.
+        
+        
         // TODO Vorsicht lastModel
         // Kann noch sehr viel anderes als Topic sein, oder?
         Iterator modeli = td.getLastModel().iterator();
@@ -65,7 +73,29 @@ public class MetaParser {
                             if (aObj instanceof AttributeDef) {
                                 AttributeDef attr = (AttributeDef) aObj;
                                 log.info(attr.getDocumentation());
+                                
+                                
+                                Type type = attr.getDomainResolvingAliases();  
+                                if (type instanceof EnumerationType) {
+                                    EnumerationType enumType = (EnumerationType) type;
+                                    log.info("enumType: " + enumType.toString());
+                                    Enumeration enumeration = enumType.getEnumeration();
+                                    log.info(enumeration.toString());
+                                    Iterator<ch.interlis.ili2c.metamodel.Enumeration.Element> enumi = enumeration.getElements();
+                                    while (enumi.hasNext()) {
+                                        ch.interlis.ili2c.metamodel.Enumeration.Element element = enumi.next();
+                                        log.info(element.getDocumentation());
+                                        log.info(element.getName());
+                                    }
+                                }
+
+                                
+                                
+                                
                             }
+                            
+                            
+                            
                             
                         }
 

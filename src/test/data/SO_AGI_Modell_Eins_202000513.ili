@@ -25,10 +25,18 @@ VERSION "2020-05-13"  =
       /** Art der Bodenbedeckung.
        */      
       Objekttyp : MANDATORY (
+        /** Gebäude 
+        */
         Gebaeude,
+        /** Strassen und Wege 
+        */
         Strasse_Weg,
         Gewaesser (
+           /** fliessendes Gewässer
+           */
            fliessendes,
+           /** stehendes Gewässer 
+           */
            stehendes
         )
       );
