@@ -3,14 +3,18 @@ package ch.so.agi;
 import java.io.Console;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import ch.ehi.basics.settings.Settings;
 import ch.interlis.ili2c.Ili2c;
 import ch.interlis.ili2c.Ili2cException;
 import ch.interlis.ili2c.config.Configuration;
 import ch.interlis.ili2c.metamodel.AbstractClassDef;
+import ch.interlis.ili2c.metamodel.AssociationDef;
 import ch.interlis.ili2c.metamodel.AttributeDef;
 import ch.interlis.ili2c.metamodel.Element;
 import ch.interlis.ili2c.metamodel.Enumeration;
@@ -23,9 +27,10 @@ import ch.interlis.ili2c.metamodel.Type;
 import ch.interlis.ili2c.metamodel.TypeModel;
 import ch.interlis.ili2c.metamodel.Viewable;
 import ch.interlis.ilirepository.IliManager;
+import ch.interlis.iom_j.itf.ModelUtilities;
 
-public class MetaParser {
-    Logger log = LoggerFactory.getLogger(MetaParser.class);
+public class MetaDataParser {
+    Logger log = LoggerFactory.getLogger(MetaDataParser.class);
 
     private TransferDescription td = null;
 
@@ -56,17 +61,16 @@ public class MetaParser {
                     if (obj instanceof Viewable) {
                         Viewable v = (Viewable) obj;
                         
-//                        if(isPureRefAssoc(v)){
-//                            continue;
-//                        }
+                        if(isPureRefAssoc(v)){
+                            continue;
+                        }
 
                         log.info(v.getDocumentation());
                         log.info(v.getMetaValues().toString());
 
                         String className = v.getScopedName(null);
                         Iterator attri = v.getAttributes();
-//                        ViewableWrapper viewableWrapper = new ViewableWrapper(className, v);
-//                        java.util.List attrv = ch.interlis.iom_j.itf.ModelUtilities.getIli1AttrList((AbstractClassDef) v);
+
                         while (attri.hasNext()) {
                             Object aObj = attri.next();
                             log.info("aObj: " + aObj);
@@ -75,62 +79,41 @@ public class MetaParser {
                                 log.info(attr.getDocumentation());
                                 
                                 
-                                Type type = attr.getDomainResolvingAliases();  
+                                Type type = attr.getDomainResolvingAll();  
                                 if (type instanceof EnumerationType) {
                                     EnumerationType enumType = (EnumerationType) type;
                                     log.info("enumType: " + enumType.toString());
-                                    Enumeration enumeration = enumType.getEnumeration();
-                                    log.info(enumeration.toString());
-                                    Iterator<ch.interlis.ili2c.metamodel.Enumeration.Element> enumi = enumeration.getElements();
-                                    while (enumi.hasNext()) {
-                                        ch.interlis.ili2c.metamodel.Enumeration.Element element = enumi.next();
-                                        log.info(element.getDocumentation());
-                                        log.info(element.getName());
+                                    
+                                    
+                                    List<String> enumValues = enumType.getValues();
+                                    log.info(enumType.getValues().toString());
+                                    
+                                    List<Map.Entry<String,ch.interlis.ili2c.metamodel.Enumeration.Element>> ev = new ArrayList<Map.Entry<String,ch.interlis.ili2c.metamodel.Enumeration.Element>>();
+                                    ModelUtilities.buildEnumElementList(ev,"",enumType.getConsolidatedEnumeration());
+                                    log.info(ev.toString());
+                                    
+                                    Iterator<Map.Entry<String,ch.interlis.ili2c.metamodel.Enumeration.Element>> evi = ev.iterator();
+                                    while(evi.hasNext()){
+                                        java.util.Map.Entry<String,ch.interlis.ili2c.metamodel.Enumeration.Element> ele = evi.next();
+                                        String eleName=ele.getKey();
+                                        Enumeration.Element eleElement=ele.getValue();
+                                        log.info("eleName: " + eleName);
+                                        log.info("eleElement: " + eleElement);
+                                        
+                                        String description = eleElement.getDocumentation();
+                                        log.info("description: " + description);
+                                        
+                                        Settings meta = eleElement.getMetaValues();
+                                        log.info("meta: " + meta.toString());
                                     }
                                 }
-
-                                
-                                
-                                
-                            }
-                            
-                            
-                            
-                            
+                            }   
                         }
-
-                        
-                        
                     }
-                }
-                
+                }   
             }
-            
-            
-            
-//            if (mObj instanceof Model) {
-//                Model model = (Model) mObj;
-//                if (model instanceof TypeModel) {
-//                    continue;                               
-//                }
-//                if (model instanceof PredefinedModel) {
-//                    continue;
-//                }
-//
-//                Iterator topici = model.iterator();
-//                while (topici.hasNext()) {
-//                    Object tObj = topici.next();
-//                    log.info(tObj.toString());
-//                }
-//            }
-
         }
-
     }
-    
-    
-    
-    
     
     private TransferDescription getTransferDescriptionFromFileName(String fileName) throws Ili2cException {
         IliManager manager = new IliManager();
@@ -145,7 +128,19 @@ public class MetaParser {
         if (iliTd == null) {
             throw new IllegalArgumentException("INTERLIS compiler failed");
         }
-        
         return iliTd;
+    }
+    
+    public static boolean isPureRefAssoc(Viewable v) {
+        if (!(v instanceof AssociationDef)) {
+            return false;
+        }
+        AssociationDef assoc = (AssociationDef) v;
+        // embedded and no attributes/embedded links?
+        if (assoc.isLightweight() && !assoc.getAttributes().hasNext()
+                && !assoc.getLightweightAssociations().iterator().hasNext()) {
+            return true;
+        }
+        return false;
     }
 }
